@@ -3,6 +3,7 @@ import db from "../db/config.js";
 import { encryptPwd, decryptPwd } from "../util/index.js";
 
 const register = (req, res) => {
+  console.log(req.body);
   const { username, email, password } = req.body;
   const q = ` SELECT * from users WHERE email=? OR username=? `;
 
@@ -19,24 +20,29 @@ const register = (req, res) => {
       const existingEmail = result.find((r) => r.email === email);
 
       if (existingUserAndEmail) {
-        return res.status(409).json(`User and email has already been used!`);
+        return res
+          .status(409)
+          .json({ message: `User and email has already been used!` });
       }
       if (existingUser) {
-        return res.status(409).json(`User has already been used!`);
+        return res.status(409).json({ message: `User has already been used!` });
       }
       if (existingEmail) {
-        return res.status(409).json(`Email has already been used!`);
+        return res
+          .status(409)
+          .json({ message: `Email has already been used!` });
       }
     }
 
     const crpPswd = encryptPwd(password, process.env.sec_key);
-    const q = "INSERT INTO users (`username`,`email`,`password`) VALUES (?)";
+    const q =
+      "INSERT INTO users (`username`,`email`,`password`) VALUES (?,?,?)";
     db.query(q, [username, email, crpPswd], (err, result) => {
       if (err) {
         return res.json(err);
       }
+      return res.status(200).json({ username, email, id: result.insertId });
     });
-    return res.status(200).json(`Account has been created`);
   });
 };
 
